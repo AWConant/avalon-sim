@@ -1,7 +1,57 @@
+import enum
 import sys
 import random
+import collections
 
-import avalon_util
+class Role(enum.Enum):
+    ASSASSIN = 7
+    MORDRED = 6
+    MORGANA = 5
+    MINION = 4
+    OBERON = 3
+    MERLIN = 2
+    PERCIVAL = 1
+    SERVANT = 0
+
+STR_2_ROLE = {
+    'Assassin': Role.ASSASSIN,
+    'Mordred': Role.MORDRED, 
+    'Morgana': Role.MORGANA, 
+    'Oberon': Role.OBERON, 
+    'Minion of Mordred': Role.MINION, 
+    'Merlin': Role.MERLIN, 
+    'Percival': Role.PERCIVAL, 
+    'Loyal Servant of Arthur': Role.SERVANT, 
+    }
+
+EVIL_ROLES = {Role.MORDRED, Role.MORGANA, Role.MINION, Role.ASSASSIN}
+GOOD_ROLES = {Role.MERLIN, Role.PERCIVAL, Role.SERVANT}
+
+KNOWN_ROLES = collections.defaultdict(set,
+                  ((Role.ASSASSIN, EVIL_ROLES - {Role.ASSASSIN}),
+                   (Role.MORDRED, EVIL_ROLES - {Role.MORDRED}),
+                   (Role.MORGANA, EVIL_ROLES - {Role.MORGANA}),
+                   (Role.MINION, EVIL_ROLES - {Role.MINION}),
+                   (Role.MERLIN, EVIL_ROLES - {Role.MORDRED}),
+                  )
+              )
+
+QUEST_SIZES = {5:  [2, 3, 2, 3, 3],
+               6:  [2, 3, 4, 3, 4],
+               7:  [2, 3, 3, 4, 4],
+               8:  [3, 4, 4, 5, 5],
+               9:  [3, 4, 4, 5, 5],
+               10: [3, 4, 4, 5, 5],
+               }
+                  
+Player = collections.namedtuple('Player', ['name', 'role', 'known'])
+
+def lookup_role_enum(s):
+    try:
+        return STR_2_ROLE[s]
+    except KeyError:
+        print("'%s' is not a valid role." % s)
+        sys.exit()
 
 def main():
     # Read player info from stdin.
@@ -14,8 +64,8 @@ def main():
     player_names = [input('Enter a player name: ') for _ in range(player_count)]
 
     print('\nPlease enter %d role names; the valid options are listed below.' % player_count)
-    for role_string in avalon_util.ROLE_STRINGS:
-        print(role_string)
+    for name in STR_2_ROLE.keys():
+        print(name)
     selected_roles = [input('Enter a role name: ') for _ in range(player_count)]
 
     # Map role input to enums and randomize the order.
@@ -23,7 +73,7 @@ def main():
     random.shuffle(roles)
     
     # Construct players.
-    players = [Player(name, role, (set(roles) & avalon_util.KNOWN_ROLES[role]))
+    players = [Player(name, role, (set(roles) & KNOWN_ROLES[role]))
                for name, role
                in zip(player_names, roles)]
 
